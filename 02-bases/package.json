@@ -1,0 +1,21 @@
+{
+  "name": "02-bases",
+  "version": "1.0.0",
+  "description": "Aplicación de la sección 3 del curso de Node de Fernando Herrera",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "echo \"Hola Mundo, desde dev!\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:andrespd99/bases-node-fernando-herrera.git"
+  },
+  "author": "Andres Eloy P",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andrespd99/bases-node-fernando-herrera/issues"
+  },
+  "homepage": "https://github.com/andrespd99/bases-node-fernando-herrera#readme"
+}
