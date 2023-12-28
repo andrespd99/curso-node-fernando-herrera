@@ -17,5 +17,10 @@
   "bugs": {
     "url": "https://github.com/andrespd99/bases-node-fernando-herrera/issues"
   },
-  "homepage": "https://github.com/andrespd99/bases-node-fernando-herrera#readme"
+  "homepage": "https://github.com/andrespd99/bases-node-fernando-herrera#readme",
+  "dependencies": {
+    "axios": "^1.6.3",
+    "get-age": "^1.0.1",
+    "uuid": "^9.0.1"
+  }
 }
