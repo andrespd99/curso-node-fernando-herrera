@@ -7,10 +7,12 @@ const {
 const {
     httpClient
 } = require('../plugins/http-client.plugin')
-
+const
+    buildLogger = require('../plugins/logger.plugin')
 
 module.exports = {
     createId,
     getAge,
-    httpClient
+    httpClient,
+    buildLogger,
 };

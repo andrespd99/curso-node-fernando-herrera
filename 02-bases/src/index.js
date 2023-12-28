@@ -1,7 +1,8 @@
-const getPokemonById = require('./js-foundation/06-promises.js')
+const {
+    buildLogger
+} = require('./plugins');
 
-getPokemonById(1).then((pokemon) => {
-    console.log(pokemon.name)
-}).catch((error) => {
-    console.log(error)
-});
+
+const logger = buildLogger('index.js');
+
+logger.log('Hello, world!');
