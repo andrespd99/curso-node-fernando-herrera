@@ -5,8 +5,8 @@ export interface CheckServiceUseCase {
     execute(url: string): Promise<boolean>;
 }
 
-type SuccessCallback = () => void;
-type ErrorCallback = (error: string) => void;
+type SuccessCallback = (() => void) | undefined;
+type ErrorCallback = ((error: string) => void) | undefined;
 
 export class CheckService implements CheckServiceUseCase {
 
@@ -27,7 +27,7 @@ export class CheckService implements CheckServiceUseCase {
             const log = new LogEntity(`Service OK - ${url}`, LogSeverityLevel.low);
             this.logRepository.saveLog(log);
 
-            this.onSuccess();
+            this.onSuccess?.();
 
 
             return true;
@@ -35,7 +35,7 @@ export class CheckService implements CheckServiceUseCase {
             const log = new LogEntity(`Service ERROR - ${url}: ${error}`, LogSeverityLevel.high);
             this.logRepository.saveLog(log);
 
-            this.onError(`${error}`)
+            this.onError?.(`${error}`)
 
             return false;
         }
