@@ -1,15 +1,21 @@
 import { env } from "../config/plugins/env.plugin";
-import { CheckService } from "../domain/use-cases/checks/check-service";
+import { CheckServiceMultiple } from "../domain/use-cases/checks/check-service-multiple";
+import { FileSystemLogDatasource } from "../infraestructure/datasources/file-system-log.datasource";
+import { MongoLogDatasource } from "../infraestructure/datasources/mongo-log.datasource";
 import { PostgresLogDatasource } from "../infraestructure/datasources/postgres-log.datasource";
 import { LogRepository } from "../infraestructure/repositories/log.repository";
 import { CronService } from "./cron/cron-service";
 import { EmailService } from "./email/email.service";
 
 
-const logRepository = new LogRepository(
-    // new FileSystemLogDatasource(),
-    // new MongoLogDatasource(),
+const logRepositoryPostgres = new LogRepository(
     new PostgresLogDatasource(),
+);
+const logRepositoryMongo = new LogRepository(
+    new MongoLogDatasource(),
+);
+const logRepositoryFs = new LogRepository(
+    new FileSystemLogDatasource(),
 );
 const emailService = new EmailService(
     {
@@ -43,11 +49,20 @@ export class Server {
 
                 const url = 'https://www.google.com'
 
-                new CheckService(
-                    logRepository,
+                new CheckServiceMultiple(
+                    [
+                        logRepositoryPostgres,
+                        logRepositoryMongo,
+                        logRepositoryFs,
+                    ],
                     () => console.log(`Service OK - ${url}`),
                     () => console.log(`Service ERROR - ${url}`)
                 ).execute(url);
+                // new CheckService(
+                //     logRepositoryPostgres,
+                //     () => console.log(`Service OK - ${url}`),
+                //     () => console.log(`Service ERROR - ${url}`)
+                // ).execute(url);
             }
         )
 
