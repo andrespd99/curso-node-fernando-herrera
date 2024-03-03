@@ -1,12 +1,15 @@
 import { env } from "../config/plugins/env.plugin";
-import { SendLogs } from "../domain/use-cases/checks/send-logs";
-import { FileSystemDatasource } from "../infraestructure/datasources/file-system.datasource";
+import { CheckService } from "../domain/use-cases/checks/check-service";
+import { PostgresLogDatasource } from "../infraestructure/datasources/postgres-log.datasource";
 import { LogRepository } from "../infraestructure/repositories/log.repository";
+import { CronService } from "./cron/cron-service";
 import { EmailService } from "./email/email.service";
 
 
 const logRepository = new LogRepository(
-    new FileSystemDatasource(),
+    // new FileSystemLogDatasource(),
+    // new MongoLogDatasource(),
+    new PostgresLogDatasource(),
 );
 const emailService = new EmailService(
     {
@@ -20,30 +23,33 @@ const emailService = new EmailService(
 
 export class Server {
     static start() {
-        console.log('Server started...');
 
-        new SendLogs(emailService, logRepository)
+        // TO SEND EMAILS
+        // console.log('Server started...');
 
-        emailService.sendEmailWithLogs(
-            [
-                'andres.epacheco99@gmail.com',
-            ]
-        )
+        // new SendLogs(emailService, logRepository)
 
-
-        // CronService.createJob(
-        //     '*/4 * * * * *',
-        //     () => {
-
-        //         const url = 'https://www.goooooooogle.com'
-
-        //         new CheckService(
-        //             logRepository,
-        //             () => console.log(`Service OK - ${url}`),
-        //             () => console.log(`Service ERROR - ${url}`)
-        //         ).execute(url);
-        //     }
+        // emailService.sendEmailWithLogs(
+        //     [
+        //         'andres.epacheco99@gmail.com',
+        //     ]
         // )
+
+
+        // TO SET CRON JOBS
+        CronService.createJob(
+            '*/4 * * * * *',
+            () => {
+
+                const url = 'https://www.google.com'
+
+                new CheckService(
+                    logRepository,
+                    () => console.log(`Service OK - ${url}`),
+                    () => console.log(`Service ERROR - ${url}`)
+                ).execute(url);
+            }
+        )
 
     }
 }

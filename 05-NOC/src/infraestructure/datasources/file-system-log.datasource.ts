@@ -51,7 +51,10 @@ export class FileSystemDatasource implements LogDatasource {
         const getLogContent = (path: string) =>
             fs.readFileSync(path, { encoding: 'utf-8' });
 
+
         let logsContent: string;
+
+
         switch (severityLevel) {
             case LogSeverityLevel.high:
                 logsContent = getLogContent(this.highLogsPath);
@@ -63,6 +66,8 @@ export class FileSystemDatasource implements LogDatasource {
                 logsContent = getLogContent(this.allLogsPath);
                 break;
         }
+
+        if (logsContent.trim() === '') return []
 
         const logs = logsContent.split('\n').map(LogEntity.fromJson);
 
