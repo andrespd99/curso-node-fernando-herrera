@@ -1,3 +1,4 @@
+import { env } from "./config/env";
 import { Server } from "./presentation/server";
 
 
@@ -8,7 +9,8 @@ import { Server } from "./presentation/server";
 
 
 function main() {
-    const server = new Server();
+    const { PORT: port, PUBLIC_PATH: publicPath } = env;
+    const server = new Server({ port, publicPath });
 
     server.start();
 }
