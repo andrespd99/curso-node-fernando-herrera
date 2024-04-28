@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
+import { prisma } from "../../data/postgres";
+import { CreateTodoDto, UpdateTodoDto } from "../../domain/dtos";
 
-const todos = [
-    { id: 1, text: 'Buy Milk', createdAt: new Date(), completed: false },
-    { id: 2, text: 'Buy bread', createdAt: new Date(), completed: true },
-    { id: 3, text: 'Buy butter', createdAt: new Date(), completed: false },
-];
+
 
 export class TodosController {
 
@@ -13,146 +11,100 @@ export class TodosController {
 
     }
 
-    public getTodoById = (req: Request, res: Response) => {
-        const id = Number.parseInt(req.params.id);
+    public getTodoById = async (req: Request, res: Response) => {
+        const id = req.params.id;
 
-        if (isNaN(id)) return res.status(400).json({ 'error': 'ID argument is not a number' })
+        if (id === undefined) return res.status(400).json({ error: '"id" parameter missing' });
 
-        const todo = todos.find((e) => e.id === id);
 
-        (todo)
-            ? res.json(todo)
-            : res.status(404).json({
-                'code': '404',
-                'error': `Todo not found`
-            });
-    }
+        const todo = await prisma.todo.findUnique({ where: { id } });
 
-    public getTodos = (req: Request, res: Response) => {
-        res.json(todos);
-    }
-
-    public createTodo = (req: Request, res: Response) => {
-        const { text } = req.body;
-
-        if (text) {
-            const newTodo = {
-                id: (todos.at(-1)?.id ?? 0) + 1,
-                text: text,
-                createdAt: new Date(),
-                completed: false,
-            };
-
-            todos.push(newTodo);
-
-            res.json({
-                message: 'TODO added!',
-                value: newTodo,
-            });
-
-            return;
+        if (!todo) {
+            return res.status(404).json({ error: `Todo not found` },);
         }
 
-        res.status(400).json({
-            code: 400,
-            error: 'Bad request: Missing parameters'
-        })
-
+        return res.json(todo);
     }
-    public deleteTodo = (req: Request, res: Response) => {
 
-        if (!req.params.id) {
-            res.status(400).json({
-                code: 400,
-                error: 'Missing required "id" parameter'
-            });
-            return;
+    public getTodos = async (req: Request, res: Response) => {
+        try {
+            const todos = await prisma.todo.findMany();
+            res.json(todos);
+        } catch (error) {
+            res.status(500);
+        }
+    }
+
+    public createTodo = async (req: Request, res: Response) => {
+        const [error, createTodoDto] = CreateTodoDto.create(req.body);
+
+        if (error) {
+            return res.status(400).json({ error });
         }
 
-        const id = Number.parseInt(req.params.id);
+        const todo = await prisma.todo.create({ data: createTodoDto! });
 
-        if (isNaN(id)) {
-            res.status(400).json({
-                code: 400,
-                error: 'ID must be of type number'
+        res.json(todo);
+    }
+
+    public deleteTodo = async (req: Request, res: Response) => {
+        const id = req.params.id;
+
+        if (!id) {
+            return res.status(400).json({
+                error: '"id" parameter missing'
             });
-            return;
         }
 
-        const todo = todos.find(e => e.id === id);
+
+        const todo = await prisma.todo.delete({ where: { id } });
 
 
         if (!todo) {
-            res.status(404).json({
-                code: 404,
+            return res.status(404).json({
                 error: 'TODO not found'
             })
-            return;
         }
 
-        const index = todos.indexOf(todo);
-        delete todos[index];
         res.json({
             message: 'TODO deleted succesfully',
             value: todo,
         });
-
     }
 
-    public updateTodo = (req: Request, res: Response) => {
+    public updateTodo = async (req: Request, res: Response) => {
+        try {
+            const id = req.params.id;
 
-        if (!req.params.id) {
-            res.status(400).json({
-                code: 400,
-                error: 'Missing required "id" parameter'
+            const [error, updateTodoDto] = UpdateTodoDto.create({ ...req.body, id });
+
+
+            if (error) {
+                return res.status(400).json({ error });
+            }
+
+            const todo = await prisma.todo.update({
+                where: { id },
+                data: updateTodoDto!.values
+            });
+
+            if (!todo) {
+                return res.status(404).json({
+                    error: 'TODO not found'
+                })
+            }
+
+            res.json({
+                message: 'TODO updated succesfully',
+                value: todo,
             });
             return;
-        }
 
-        const id = Number.parseInt(req.params.id);
-
-        if (isNaN(id)) {
-            res.status(400).json({
-                code: 400,
-                error: 'ID must be of type number'
-            });
-            return;
-        }
-
-        const todo = todos.find(e => e.id === id);
-
-
-        if (!todo) {
-            res.status(404).json({
-                code: 404,
-                error: 'TODO not found'
-            })
-            return;
-        }
-
-        const index = todos.indexOf(todo);
-
-        const { text, createdAt, completed } = req.body;
-
-        if (!text && !createdAt && !completed) {
-            res.status(400).json({
-                error: 400,
-                message: 'Missing parameter: either "text", "createdAt" or "completed" parameter must be provided',
+        } catch (error) {
+            return res.status(500).json({
+                error: 'Unknown server error',
             });
         }
-
-        todos[index] = {
-            id,
-            text: text ?? todo.text,
-            completed: completed ?? todo.completed,
-            createdAt: createdAt ?? todo.createdAt,
-        };
-
-        res.json({
-            message: 'TODO updated succesfully',
-            value: todos[index],
-        });
-        return;
     }
 
 }
