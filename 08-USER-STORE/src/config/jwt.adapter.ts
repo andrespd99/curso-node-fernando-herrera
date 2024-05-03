@@ -12,12 +12,24 @@ interface JwtSignOptions {
 
 export const jwt = {
     sign: (payload: any, options?: JwtSignOptions) => {
-        return sign(payload, SECRET_KEY, {
-            ...(options?.duration !== undefined ? { expiresIn: options.duration } : {})
+        return new Promise((resolve) => {
+            sign(payload, SECRET_KEY, {
+                ...(options?.duration !== undefined ? { expiresIn: options.duration } : {})
+            }, (err, token) => {
+                if (err) return resolve(null);
+
+                resolve(token);
+            });
         });
     },
     verify: (token: string) => {
-        return verify(token, SECRET_KEY);
+        return new Promise((resolve) => {
+            verify(token, SECRET_KEY, (err, decoded) => {
+                if (err) return resolve(null);
+
+                resolve(decoded);
+            });
+        });
     }
 
 }

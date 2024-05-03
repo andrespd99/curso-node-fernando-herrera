@@ -1,10 +1,10 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 
 interface SendMailOptions {
     to: string | string[];
     subject: string;
     html: string;
-    attachments: Attachment[],
+    attachments?: Attachment[] | undefined;
 }
 
 interface Attachment {
@@ -13,20 +13,25 @@ interface Attachment {
 }
 
 interface EmailServiceConfig {
-    service: string;
-    auth: {
-        user: string;
-        pass: string;
-    };
+    mailerService: string;
+    mailerEmail: string;
+    mailerSecret: string;
 }
 
 
 export class EmailService {
 
-    private transporter;
+    private transporter: Transporter;
 
     constructor(config: EmailServiceConfig) {
-        this.transporter = nodemailer.createTransport(config);
+        const { mailerEmail, mailerSecret, mailerService } = config;
+        this.transporter = nodemailer.createTransport({
+            service: mailerService,
+            auth: {
+                user: mailerEmail,
+                pass: mailerSecret,
+            }
+        });
     }
 
 
@@ -36,31 +41,10 @@ export class EmailService {
         try {
             const sentInfo = await this.transporter.sendMail(options);
 
-            console.log(sentInfo);
-
-
-
             return true;
         } catch (error) {
             console.error(error);
             return false;
         }
     }
-
-    sendEmailWithLogs(to: string | string[]) {
-        const subject = 'Logs del servidor';
-        const html = `
-        <h3>Logs de sistema - NOC</h3>
-        <p>Acá están los logs del servidor mi rey 🗿</p>
-        `;
-
-        const attachments: Attachment[] = [
-            { filename: 'logs-all.log', path: './logs/logs-all.log' },
-            { filename: 'logs-medium.log', path: './logs/logs-medium.log' },
-            { filename: 'logs-high.log', path: './logs/logs-high.log' },
-        ];
-
-        return this.sendEmail({ to, subject, attachments, html });
-    }
-
 }
