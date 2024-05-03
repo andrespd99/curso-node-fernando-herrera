@@ -11,13 +11,13 @@ interface JwtSignOptions {
 }
 
 export const jwt = {
-    sign: (payload: any, secret: string, options?: JwtSignOptions) => {
+    sign: (payload: any, options?: JwtSignOptions) => {
         return sign(payload, SECRET_KEY, {
             ...(options?.duration !== undefined ? { expiresIn: options.duration } : {})
         });
     },
-    verify: (token: string, secret: string) => {
-        return verify(token, secret);
+    verify: (token: string) => {
+        return verify(token, SECRET_KEY);
     }
 
 }

@@ -30,7 +30,7 @@ export class AuthService {
 
             const { id, email, role, } = userEntity;
 
-            const token = jwt.sign({ id, email, role }, 'Shhhhh!', { duration: '2h' })
+            const token = jwt.sign({ id, role }, { duration: '2h' })
 
             return { user: userEntity, token: token, };
         } catch (error) {
