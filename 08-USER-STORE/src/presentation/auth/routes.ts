@@ -14,11 +14,15 @@ export class AuthRoutes {
 
         const router = Router();
 
-        const emailService = new EmailService({
-            mailerEmail: envs.MAILER_EMAIL,
-            mailerSecret: envs.MAILER_SECRET_KEY,
-            mailerService: envs.MAILER_SERVICE,
-        });
+        const emailService = new EmailService(
+            {
+                mailerEmail: envs.MAILER_EMAIL,
+                mailerSecret: envs.MAILER_SECRET_KEY,
+                mailerService: envs.MAILER_SERVICE,
+            },
+            envs.DISABLE_MAILING,
+        );
+
         const authService = new AuthService(emailService);
         const authController = new AuthController(authService);
 

@@ -29,7 +29,8 @@ export class CustomError extends Error {
         return new CustomError(message, 409);
     }
 
-    static internal(message: string) {
-        return new CustomError(message, 500);
+    static internal(message?: string) {
+        console.log(`Status 500: ${message ?? 'Internal server error'}`)
+        return new CustomError('Internal server error', 500);
     }
 }

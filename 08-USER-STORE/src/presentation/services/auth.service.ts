@@ -8,117 +8,118 @@ import { EmailService } from "./email.service";
 
 
 export class AuthService {
-    constructor(
-        private readonly emailService: EmailService,
-    ) { }
+	constructor(
+		private readonly emailService: EmailService,
+	) { }
 
-    // Normalize execution time to 150 ms to avoid timing attacks...
-    private static _execTime = 200;
+	// Normalize execution time to 150 ms to avoid timing attacks...
+	private static _execTime = 200;
 
-    async login(dto: LoginDTO) {
-        const _start = new Date().getTime();
+	async login(dto: LoginDTO) {
+		const _start = new Date().getTime();
 
-        try {
+		try {
 
-            const user = await UserModel.findOne({ email: dto.email });
+			const user = await UserModel.findOne({ email: dto.email });
 
-            if (!user) throw CustomError.badRequest('Wrong email or password');
-            // Encrypt password
-            const passwordIsValid = await passwordEncryptAdapter.compare(dto.password, user.password);
+			if (!user) throw CustomError.badRequest('Wrong email or password');
+			// Encrypt password
+			const passwordIsValid = await passwordEncryptAdapter.compare(dto.password, user.password);
 
-            if (!passwordIsValid) throw CustomError.badRequest('Wrong email or password');
+			if (!passwordIsValid) throw CustomError.badRequest('Wrong email or password');
 
-            // Generate JWT
-            const userEntity = UserEntity.fromObject(user);
+			// Generate JWT
+			const userEntity = UserEntity.fromObject(user);
 
-            const { id, email, role, } = userEntity;
+			const { id, email, role, } = userEntity;
 
-            const token = jwt.sign({ id, role }, { duration: '48h' })
+			const token = await jwt.sign({ id, role }, { duration: '2h' })
 
-            return { user: userEntity, token: token, };
-        } catch (error) {
-            throw CustomError.internal(`${error}`);
-        } finally {
-            if (new Date().getTime() - _start < AuthService._execTime) {
-                await new Promise((resolve) => setTimeout(resolve, AuthService._execTime - (new Date().getTime() - _start)));
-            }
-        }
 
-    }
+			return { user: userEntity, token: token, };
+		} catch (error) {
+			throw CustomError.internal(`${error}`);
+		} finally {
+			if (new Date().getTime() - _start < AuthService._execTime) {
+				await new Promise((resolve) => setTimeout(resolve, AuthService._execTime - (new Date().getTime() - _start)));
+			}
+		}
 
-    async registerUser(dto: RegisterUserDTO) {
-        const _start = new Date().getTime();
-        try {
-            const emailExists = await UserModel.findOne({ email: dto.email });
+	}
 
-            if (emailExists) throw CustomError.badRequest('Email already exists');
-            const user = new UserModel(dto);
-            // Encrypt password
-            user.password = await passwordEncryptAdapter.encrypt(user.password);
+	async registerUser(dto: RegisterUserDTO) {
+		const _start = new Date().getTime();
+		try {
+			const emailExists = await UserModel.findOne({ email: dto.email });
 
-            await user.save();
-            // Send verification email
-            await this.sendVerificationEmail(user.email);
+			if (emailExists) throw CustomError.badRequest('Email already exists');
+			const user = new UserModel(dto);
+			// Encrypt password
+			user.password = await passwordEncryptAdapter.encrypt(user.password);
 
-            const userEntity = UserEntity.fromObject(user);
+			await user.save();
+			// Send verification email
+			await this.sendVerificationEmail(user.email);
 
-            // Generate JWT
-            const { id, role } = userEntity;
-            const token = await jwt.sign({ id, role }, { duration: '48h' })
+			const userEntity = UserEntity.fromObject(user);
 
-            return { user: userEntity, token: token };
-        } catch (error) {
-            throw CustomError.internal(`${error}`);
-        } finally {
-            if (new Date().getTime() - _start < AuthService._execTime) {
-                await new Promise((resolve) => setTimeout(resolve, AuthService._execTime - (new Date().getTime() - _start)));
-            }
-        }
+			// Generate JWT
+			const { id, role } = userEntity;
+			const token = await jwt.sign({ id, role }, { duration: '48h' })
 
-    }
+			return { user: userEntity, token: token };
+		} catch (error) {
+			throw CustomError.internal(`${error}`);
+		} finally {
+			if (new Date().getTime() - _start < AuthService._execTime) {
+				await new Promise((resolve) => setTimeout(resolve, AuthService._execTime - (new Date().getTime() - _start)));
+			}
+		}
 
-    async verifyEmail(dto: VerifyEmailDTO) {
-        const _start = new Date().getTime();
-        try {
-            const payload = await jwt.verify(dto.token);
+	}
 
-            if (!payload) throw CustomError.unauthorized('Invalid token or email expired');
+	async verifyEmail(dto: VerifyEmailDTO) {
+		const _start = new Date().getTime();
+		try {
+			const payload = await jwt.verify(dto.token);
 
-            const { email } = payload as any;
-            if (!email) throw CustomError.internal('Invalid token: Email missing in payload');
+			if (!payload) throw CustomError.unauthorized('Invalid token or email expiredw');
 
-            const user = await UserModel.findOne({ email });
+			const { email } = payload as any;
+			if (!email) throw CustomError.internal('Invalid token: Email missing in payload');
 
-            if (!user) throw CustomError.internal('Could not find a user with this email on the database');
+			const user = await UserModel.findOne({ email });
 
-            if (user.isVerified) throw CustomError.badRequest('Email already verified');
-            user.isVerified = true;
+			if (!user) throw CustomError.internal('Could not find a user with this email on the database');
 
-            await user.save()
-        } catch (error) {
-            throw CustomError.internal(`${error}`);
-        } finally {
-            if (new Date().getTime() - _start < AuthService._execTime) {
-                await new Promise((resolve) => setTimeout(resolve, AuthService._execTime - (new Date().getTime() - _start)));
-            }
-        }
+			if (user.isVerified) throw CustomError.badRequest('Email already verified');
+			user.isVerified = true;
 
-    }
+			await user.save()
+		} catch (error) {
+			throw CustomError.internal(`${error}`);
+		} finally {
+			if (new Date().getTime() - _start < AuthService._execTime) {
+				await new Promise((resolve) => setTimeout(resolve, AuthService._execTime - (new Date().getTime() - _start)));
+			}
+		}
 
-    private sendVerificationEmail = async (email: string) => {
+	}
 
-        const token = await jwt.sign({ email }, { duration: '1m' });
-        if (!token) throw CustomError.internal('Could not sign JWT');
+	private sendVerificationEmail = async (email: string) => {
 
-        const link = `${envs.WEB_SERVICE_URL}/auth/validate-email/${token}`;
+		const token = await jwt.sign({ email }, { duration: '1m' });
+		if (!token) throw CustomError.internal('Could not sign JWT');
 
-        const wasSent = this.emailService.sendEmail({
-            to: email,
-            subject: 'Código de verificación',
-            html: otpHtmlTemplate('My App', email, link),
-        });
-        if (!wasSent) throw CustomError.internal(`Could not send verification email to ${email}`);
-    };
+		const link = `${envs.WEB_SERVICE_URL}/auth/validate-email/${token}`;
+
+		const wasSent = this.emailService.sendEmail({
+			to: email,
+			subject: 'Código de verificación',
+			html: otpHtmlTemplate('My App', email, link),
+		});
+		if (!wasSent) throw CustomError.internal(`Could not send verification email to ${email}`);
+	};
 }
 
 const otpHtmlTemplate = (appName: string, email: string, verificationLink: string) => `

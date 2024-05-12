@@ -16,6 +16,7 @@ interface EmailServiceConfig {
     mailerService: string;
     mailerEmail: string;
     mailerSecret: string;
+
 }
 
 
@@ -23,7 +24,7 @@ export class EmailService {
 
     private transporter: Transporter;
 
-    constructor(config: EmailServiceConfig) {
+    constructor(config: EmailServiceConfig, private readonly disableMailing: boolean) {
         const { mailerEmail, mailerSecret, mailerService } = config;
         this.transporter = nodemailer.createTransport({
             service: mailerService,
@@ -36,6 +37,8 @@ export class EmailService {
 
 
     async sendEmail(options: SendMailOptions): Promise<boolean> {
+        if (this.disableMailing) return true;
+
         const { to, subject, html, attachments = [] } = options;
 
         try {

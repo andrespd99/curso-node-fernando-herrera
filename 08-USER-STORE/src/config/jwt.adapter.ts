@@ -22,12 +22,12 @@ export const jwt = {
             });
         });
     },
-    verify: (token: string) => {
+    verify: <T>(token: string): Promise<T | null> => {
         return new Promise((resolve) => {
             verify(token, SECRET_KEY, (err, decoded) => {
                 if (err) return resolve(null);
 
-                resolve(decoded);
+                resolve(decoded as T);
             });
         });
     }
